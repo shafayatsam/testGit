@@ -1,0 +1,79 @@
+public class duplicateLeadCheck {
+    
+    public static void execute(){
+        
+        List<Lead> newleads = getNewLeads();
+        
+        System.debug(newLeads.size());
+        
+        Map<Boolean, List<Lead>> duplicateResult = leadDuplicateCheck(newleads);
+        
+        for(Boolean tf : duplicateResult.keySet()){
+            
+            	System.debug(duplicateResult.get(tf));
+        }
+        
+                    
+   }
+	
+    public static Map<Boolean, List<Lead>> leadDuplicateCheck(List<Lead> l){
+        
+        //Made some Demo Redords
+        List<Lead> mainLead = new List<Lead>();
+        Territory__c ack = [Select Id from Territory__c where name = 'Maxico' limit 1];
+		Territory__c ack2 = [Select Id from Territory__c where name = 'US' limit 1];        
+        
+        for(Integer i = 1; i < 2; i++){
+            mainLead.add(new Lead(LastName='Test Leads '+i, Company='Test Company '+i, Email='testEmail'+i+'@test.com', Territory__c=ack.Id));
+            mainLead.add(new Lead(LastName='Test Leads '+(i+5), Company='Test Company '+(i+5), Email='testEmailx'+(i+5)+'@test.com', Territory__c=ack2.Id));
+        } 
+        
+        //Make Unque key upon existing records
+        Set<String> leadUniqueKeys = new Set<String>();        
+        For(Lead ll : mainLead){
+            leadUniqueKeys.add(ll.Email+'-'+ ll.Territory__r.Region__c+'-'+ll.Company);
+        }
+
+        //Finding Out the duplicate once
+        Map<Boolean, List<Lead>> duplicateOrNot = new Map<Boolean, List<Lead>>();
+        List<Lead> leadTrue = new List<Lead>();
+        List<Lead> leadFalse = new List<Lead>(); 
+        
+        For(Lead cl : l){
+            String newKey = cl.Email+'-'+cl.Territory__r.Region__c+'-'+cl.Company;
+            Integer counter =0;
+            For(String s : leadUniqueKeys){
+                counter++;              
+                if(newKey == s){ 
+                    leadFalse.add(cl);
+                }
+                else if(newKey != s && leadUniqueKeys.size() == counter){
+                    leadTrue.add(cl);
+                }
+            }
+        }
+        
+        
+        duplicateOrNot.put(true,leadTrue);
+        duplicateOrNot.put(false,leadFalse);
+        
+      return duplicateOrNot;
+    }
+    
+    public static List<Lead> getNewLeads(){
+        
+        //Create new Leads
+        List<Lead> leadListDuplicate = new List<Lead>();
+        Territory__c ack = [Select Id from Territory__c where name = 'Maxico' limit 1];
+        Territory__c ack2 = [Select Id from Territory__c where name = 'US' limit 1];
+        
+        for(Integer i = 1; i <= 5; i++){
+            leadListDuplicate.add(new Lead(LastName='Test Lead '+i, Company='Test Company '+i, Email='testEmail'+i+'@test.com', Territory__c=ack.Id));
+            leadListDuplicate.add(new Lead(LastName='Test Lead '+(i+5), Company='Test Company '+(i+5), Email='testEmailx'+(i+5)+'@test.com', Territory__c=ack2.Id));
+        }
+        
+        System.debug(leadListDuplicate.size());
+        
+        return leadListDuplicate;
+    }
+}

@@ -1,0 +1,72 @@
+@isTest
+public class OpportunityTriggerTest {
+    
+    @testSetup
+    static void testDataFactory(){
+        String uniqueUserName = 'standarduser' + DateTime.now().getTime() + '@testorg.com';
+        String uniqueUserName2 = 'standarduser2' + DateTime.now().getTime() + '@testorg.com';
+        
+        Profile p = [SELECT Id FROM Profile WHERE Name='Standard User'];
+        UserRole r = [SELECT Id FROM UserRole WHERE Name='CFO'];
+        UserRole r2 = [SELECT Id FROM UserRole WHERE Name='CEO'];
+        
+        User u = new User(Alias = 'standt', Email='standarduser@testorg.com', EmailEncodingKey='UTF-8', LastName='Testing', LanguageLocaleKey='en_US',
+                          LocaleSidKey='en_US', ProfileId = p.Id, TimeZoneSidKey='America/Los_Angeles',UserName=uniqueUserName, UserRoleId=r.Id);
+        
+        User u2 = new User(Alias = 'standtd', Email='standarduser@testorg.com', EmailEncodingKey='UTF-8', LastName='Testing CEO', LanguageLocaleKey='en_US',
+                          LocaleSidKey='en_US', ProfileId = p.Id, TimeZoneSidKey='America/Los_Angeles',UserName=uniqueUserName2, UserRoleId=r2.Id);        
+        
+        insert u;
+        insert u2;
+    }
+    
+    
+    @isTest
+    static void testUpdateOpportunityTrigger(){
+        User u = [SELECT Id FROM User WHERE UserRole.Name='CFO' LIMIT 1];
+        User u2 = [SELECT Id FROM User WHERE UserRole.Name='CEO' LIMIT 1];
+        
+        System.runAs(u){
+            Opportunity opp = new Opportunity(Name='Test Opportunity', StageName='Perception Analysis', CloseDate=Date.today().addDays(30), Probability=60);
+        	insert opp;            
+        }
+        
+        System.runAs(u2){
+            Opportunity retriveOpp = [SELECT Id, Name FROM Opportunity WHERE Name='Test Opportunity'];
+            retriveOpp.Name = retriveOpp.Name + ' 1';
+            
+            Test.startTest();
+            Database.SaveResult result = Database.update(retriveOpp, false);
+            Test.stopTest();
+            
+            System.assert(!result.isSuccess());
+            System.assert(result.getErrors().size() > 0);
+            System.assertEquals('You\'re not eligable to update', result.getErrors()[0].getMessage());
+        }  
+        
+    }
+    
+    
+    @isTest
+    static void testDeleteOpportunityTrigger(){
+        
+        User u = [SELECT Id FROM User WHERE UserRole.Name='CFO' LIMIT 1];
+        User u2 = [SELECT Id FROM User WHERE UserRole.Name='CEO' LIMIT 1];
+        
+        System.runAs(u){
+            Opportunity opp = new Opportunity(Name='Test Opportunity', StageName='Perception Analysis', CloseDate=Date.today().addDays(30), Probability=75);
+        	insert opp;            
+        }        
+        System.runAs(u2){
+            Opportunity retriveOpp = [SELECT Id FROM Opportunity WHERE Name='Test Opportunity'];
+            
+            Test.startTest();
+            Database.DeleteResult result = Database.delete(retriveOpp, false);
+            Test.stopTest();
+            
+            System.assert(!result.isSuccess());
+            System.assert(result.getErrors().size() > 0);
+            System.assertEquals('You\'re not eligable to Delete', result.getErrors()[0].getMessage());
+        }
+    }     
+}
