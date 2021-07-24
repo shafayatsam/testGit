@@ -1,0 +1,26 @@
+public class DeckofCards {
+   
+    public static Set<String> Suit = new Set<String>{'HEART', 'SPADE', 'DIAMOND', 'CLUB'};           
+    public static Set<String> CardValues = new Set<String>{'ACE', '1', '2','3', '5', '6', '7', '8', '9', '10','JACK', 'QWEEN', 'KING'};
+        
+    public Map<String, SingleCard> mapOfCards = new Map<String, SingleCard>();
+       
+    public void addACard(SingleCard aCard){
+        if(mapOfCards.size() < 52 && !mapOfCards.containsKey(aCard.cardSuit+aCard.cardValue) && (aCard.cardSuit != null || aCard.cardValue != null)){
+            mapOfCards.put(aCard.cardSuit+aCard.cardValue, aCard);						//Any one of cardSuit or cardValue checked would be enough
+            																			//Beacuse both are checked into the constructor			
+        }
+    }
+    
+    public class SingleCard{
+                
+        public String cardSuit;
+        public String cardValue;
+        public SingleCard(String suit, String cardVal){
+            if(DeckofCards.Suit.contains(suit) && DeckofCards.CardValues.contains(cardVal)){    
+            	this.cardSuit = suit;
+	            this.cardValue = cardVal;
+            }
+        }
+    }  
+}
